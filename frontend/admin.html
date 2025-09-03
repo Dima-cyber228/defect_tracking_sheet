@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>Администрирование - Списки выбора</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0; padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px; margin: 0 auto;
+            background: white; padding: 30px;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { text-align: center; color: #333; }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block; margin-bottom: 5px;
+            font-weight: bold; color: #555;
+        }
+        textarea {
+            width: 100%; min-height: 100px;
+            padding: 10px; border: 1px solid #ddd;
+            border-radius: 4px; font-family: monospace;
+        }
+        button {
+            background-color: #007bff; color: white;
+            padding: 12px 24px; border: none;
+            border-radius: 4px; cursor: pointer;
+            font-size: 16px; margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        .login-form {
+            max-width: 400px; margin: 50px auto;
+            background: white; padding: 30px;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        input[type="password"] {
+            width: 100%; padding: 10px;
+            border: 1px solid #ddd; border-radius: 4px;
+            margin-bottom: 15px; box-sizing: border-box;
+        }
+        .message {
+            padding: 15px; margin: 15px 0;
+            border-radius: 4px;
+        }
+        .message-success {
+            background-color: #d4edda; border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .message-error {
+            background-color: #f8d7da; border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .hidden { display: none; }
+        .actions {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .back-button {
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .back-button:hover {
+            background-color: #545b62;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-button">На главную</a>
+        <h1>Администрирование списков выбора</h1>
+        <div id="loginSection">
+            <div class="login-form">
+                <h2>Вход в административную панель</h2>
+                <div id="loginMessage"></div>
+                <input type="password" id="adminPassword" placeholder="Введите пароль" autocomplete="off">
+                <button onclick="login()">Войти</button>
+            </div>
+        </div>
+        <div id="adminSection" class="hidden">
+            <div id="messageArea"></div>
+            <div class="form-group">
+                <label for="executors">Исполнители (по одному в строке):</label>
+                <textarea id="executors" placeholder="Шуев
+Малоев
+Козырев
+Овчинников"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="responsibles">Ответственные (по одному в строке):</label>
+                <textarea id="responsibles" placeholder="Овчинников
+Сулейманов"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="sections">Участки (по одному в строке):</label>
+                <textarea id="sections" placeholder="Фасовка
+Композиция
+Башня
+Сульфирование
+Баковое хозяйство"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="equipment">Оборудование (по одному в строке):</label>
+                <textarea id="equipment" placeholder="Линия 1
+Линия 2
+Автоклав ГВ-3,2
+Насос ц/б АХ100-65-31Б"></textarea>
+            </div>
+            <div class="actions">
+                <button onclick="saveLists()">Сохранить изменения</button>
+                <button onclick="loadLists()" style="background-color: #6c757d;">Обновить</button>
+                <button onclick="logout()" style="background-color: #dc3545;">Выйти</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.getItem('adminToken')) {
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('adminSection').classList.remove('hidden');
+                loadLists();
+            }
+        });
+        function showMessage(message, type = 'success') {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.innerHTML = `<div class="message message-${type}">${message}</div>`;
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+        }
+        function showLoginMessage(message, type = 'error') {
+            const messageArea = document.getElementById('loginMessage');
+            messageArea.innerHTML = `<div class="message message-${type}">${message}</div>`;
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+        }
+        async function login() {
+            const password = document.getElementById('adminPassword').value;
+            if (!password) {
+                showLoginMessage('Введите пароль', 'error');
+                return;
+            }
+            try {
+                const response = await fetch('/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: password })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('adminToken', data.token);
+                    document.getElementById('loginSection').classList.add('hidden');
+                    document.getElementById('adminSection').classList.remove('hidden');
+                    loadLists();
+                    showLoginMessage('Успешный вход', 'success');
+                } else if (response.status === 401) {
+                    showLoginMessage('Неверный пароль', 'error');
+                } else {
+                    showLoginMessage('Ошибка сервера: ' + response.status, 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                showLoginMessage('Ошибка подключения к серверу', 'error');
+            }
+        }
+        function logout() {
+            localStorage.removeItem('adminToken');
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('adminSection').classList.add('hidden');
+            document.getElementById('adminPassword').value = '';
+        }
+        async function loadLists() {
+            try {
+                const response = await fetch('/dropdown-lists/');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('executors').value =
+                        data.executors ? data.executors.join('\n') : '';
+                    document.getElementById('responsibles').value =
+                        data.responsibles ? data.responsibles.join('\n') : '';
+                    document.getElementById('sections').value =
+                        data.sections ? data.sections.join('\n') : '';
+                    document.getElementById('equipment').value =
+                        data.equipment ? data.equipment.join('\n') : '';
+                } else {
+                    showMessage('Ошибка загрузки списков: ' + response.status, 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                showMessage('Ошибка подключения к серверу', 'error');
+            }
+        }
+        async function saveLists() {
+            let executorsRaw = document.getElementById('executors').value;
+            let responsiblesRaw = document.getElementById('responsibles').value;
+            let sectionsRaw = document.getElementById('sections').value;
+            let equipmentRaw = document.getElementById('equipment').value;
+            const normalizeNewlines = (text) => text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            const executors = normalizeNewlines(executorsRaw);
+            const responsibles = normalizeNewlines(responsiblesRaw);
+            const sections = normalizeNewlines(sectionsRaw);
+            const equipment = normalizeNewlines(equipmentRaw);
+            try {
+                const response = await fetch('/admin/update-lists', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('adminToken')
+                    },
+                    body: JSON.stringify({
+                        executors: executors,
+                        responsibles: responsibles,
+                        sections: sections,
+                        equipment: equipment
+                    })
+                });
+                if (response.ok) {
+                    showMessage('Списки успешно обновлены!');
+                } else if (response.status === 401) {
+                    showMessage('Ошибка авторизации. Войдите снова.', 'error');
+                    logout();
+                } else {
+                    showMessage('Ошибка сохранения списков: ' + response.status, 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                showMessage('Ошибка подключения к серверу', 'error');
+            }
+        }
+        document.getElementById('adminPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+    </script>
+</body>
+</html>

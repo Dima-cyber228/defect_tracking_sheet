@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Подписка на уведомления</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .message {
+            padding: 10px;
+            margin:10px 0;
+            border-radius: 4px;
+        }
+        .message-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .message-error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .instruction {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border:1px solid #ddd;
+            border-radius:4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Подписка на уведомления</h1>
+        <div id="messageArea"></div>
+        <form id="subscribeForm">
+            <div class="form-group">
+                <label for="name">Ваше имя (как указано в листе дефектов):</label>
+                <input type="text" id="name" required>
+            </div>
+            <div class="form-group">
+                <label for="telegramId">Ваш ID Telegram:</label>
+                <input type="text" id="telegramId" required>
+            </div>
+            <button type="submit">Подписаться</button>
+        </form>
+        <div class="instruction">
+            <h3>Как получить свой Telegram ID?</h3>
+            <p>1. Зайдите в Telegram и найдите бота <a href="https://t.me/TheGetAnyID_bot" target="_blank">@TheGetAnyID_bot</a>.</p>
+            <p>2. Напишите ему <code>/start</code> или нажмите кнопку.</p>
+            <p>3. Вам придет сообщение, например:</p>
+            <pre>ID: 5177787571
+Name: Виктор</pre>
+            <p>4. Впишите ваш <strong>ID</strong> в поле выше.</p>
+			<p>5. Зайдите в Telegram и найдите бота <a href="https://t.me/Defects_Not_Bot" target="_blank">@Defects_Not_Bot</a>.</p>
+			<p>6. Напишите ему <code>/start</code> или нажмите кнопку.</p>
+			<p>7. Поздравляем! Вы подписаны на уведомления в телеграмм!</p>
+        </div>
+    </div>
+    <script>
+        function showMessage(message, type = 'success') {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.innerHTML = `<div class="message message-${type}">${message}</div>`;
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+        }
+        document.getElementById("subscribeForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            const name = document.getElementById("name").value.trim();
+            const telegramId = document.getElementById("telegramId").value.trim();
+            if (!name || !telegramId) {
+                showMessage("Пожалуйста, заполните все поля", "error");
+                return;
+            }
+            try {
+                const response = await fetch("/subscribe", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, telegram_id: telegramId })
+                });
+                if (response.ok) {
+                    showMessage("Вы успешно подписались на уведомления!");
+                    document.getElementById("subscribeForm").reset();
+                } else {
+                    showMessage("Ошибка при подписке", "error");
+                }
+            } catch (error) {
+                console.error("Ошибка сети:", error);
+                showMessage("Ошибка сети", "error");
+            }
+        });
+    </script>
+</body>
+</html>

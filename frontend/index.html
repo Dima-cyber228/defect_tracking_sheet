@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Учёт дефектов</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 0;
+      padding: 20px; 
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 1800px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1, h2, h3 {
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    h2 {
+      text-align: center;
+      margin: 30px 0 20px 0;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #eee;
+    }
+    .filters {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: end;
+    }
+    .filter-group {
+      margin-right: 15px;
+    }
+    .filter-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #555;
+      font-size: 12px;
+    }
+    .filter-group select, .filter-group input {
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    form {
+      background-color: #f8f9fa;
+      padding: 20px;
+      border-radius: 5px;
+      margin-bottom: 30px;
+    }
+    .form-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    .form-group {
+      flex: 1;
+    }
+    .form-group-full {
+      width: 100%;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #555;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+      font-size: 14px;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #0056b3;
+      transform: translateY(-1px);
+    }
+    .btn-take {
+      background-color: #28a745;
+    }
+    .btn-take:hover {
+      background-color: #1e7e34;
+    }
+    .btn-complete {
+      background-color: #17a2b8;
+    }
+    .btn-complete:hover {
+      background-color: #117a8b;
+    }
+    .btn-reset {
+      background-color: #6c757d;
+    }
+    .btn-reset:hover {
+      background-color: #545b62;
+    }
+    .btn-filter {
+      background-color: #28a745;
+      padding: 8px 15px;
+    }
+    .btn-filter:hover {
+      background-color: #1e7e34;
+    }
+    .btn-clear {
+      background-color: #ffc107;
+      color: #212529;
+    }
+    .btn-clear:hover {
+      background-color: #e0a800;
+    }
+    .btn-view {
+      background-color: #17a2b8;
+      color: white;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+    .btn-view:hover {
+      background-color: #117a8b;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background-color: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      table-layout: fixed;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+      word-wrap: break-word;
+    }
+    th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+      color: #555;
+      position: sticky;
+      top: 0;
+    }
+    tr:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+    tr:hover {
+      background-color: #e9ecef;
+    }
+    /* Цвета для уровней опасности */
+    .danger-low {
+      background-color: #d4edda !important;
+      border-color: #c3e6cb;
+    }
+    .danger-medium {
+      background-color: #fff3cd !important;
+      border-color: #ffeaa7;
+    }
+    .danger-high {
+      background-color: #f8d7da !important;
+      border-color: #f5c6cb;
+    }
+    /* Цвета для статусов */
+    .status-new {
+      color: #6c757d;
+      font-weight: bold;
+    }
+    .status-in-progress {
+      color: #28a745;
+      font-weight: bold;
+    }
+    .status-completed {
+      color: #17a2b8;
+      font-weight: bold;
+    }
+    .actions {
+      white-space: nowrap;
+      text-align: center;
+    }
+    .assigned-info {
+      font-size: 0.85em;
+      color: #666;
+      margin-top: 3px;
+    }
+    .resolution-time {
+      font-weight: bold;
+      text-align: center;
+    }
+    .time-high {
+      color: #dc3545;
+      font-weight: bold;
+    }
+    .time-medium {
+      color: #ffc107;
+      font-weight: bold;
+    }
+    .time-low {
+      color: #28a745;
+      font-weight: bold;
+    }
+    /* Стили для сообщений */
+    .message {
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+    .message-success {
+      background-color: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+    }
+    .message-error {
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+    }
+    /* Стили для модального окна фото */
+    .photo-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .photo-modal img {
+      max-width: 90%;
+      max-height: 90%;
+    }
+    .photo-modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: white;
+      font-size: 30px;
+      cursor: pointer;
+      background: rgba(0,0,0,0.5);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* Адаптивность */
+    @media (max-width: 768px) {
+      .container {
+        margin: 10px;
+        padding: 15px;
+      }
+      .form-row {
+        flex-direction: column;
+        gap: 0;
+      }
+      table {
+        font-size: 12px;
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+      th, td {
+        padding: 8px;
+      }
+      button {
+        padding: 8px 12px;
+        font-size: 12px;
+        margin: 2px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Система учёта дефектов</h1>
+    <div style="text-align: center; margin-bottom: 20px;">
+      <a href="/admin" target="_blank" style="color: #007bff; text-decoration: none; font-size: 14px;">
+        🔧 Управление списками
+      </a>
+    </div>
+	<div style="text-align: center; margin-bottom: 20px;">
+	  <a href="/subscribe" target="_blank" style="color: #007bff; text-decoration: none; font-size: 14px; display: inline-block; padding: 8px 16px; background-color: #e9ecef; border-radius: 4px; border: 1px solid #d3d9df;">
+		🔔 Подписаться на уведомления в Telegram
+	  </a>
+	</div>
+    <!-- Фильтры -->
+    <div class="filters">
+      <div class="filter-group">
+        <label for="filterSection">Участок:</label>
+        <select id="filterSection">
+          <option value="">Все участки</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="filterStatus">Статус:</label>
+        <select id="filterStatus">
+          <option value="">Все статусы</option>
+          <option value="новый">Новый</option>
+          <option value="в работе">В работе</option>
+          <option value="завершён">Завершён</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="filterDanger">Опасность:</label>
+        <select id="filterDanger">
+          <option value="">Все уровни</option>
+          <option value="низкий">Низкий</option>
+          <option value="средний">Средний</option>
+          <option value="высокий">Высокий</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="filterAssigned">Исполнитель:</label>
+        <select id="filterAssigned">
+          <option value="">Все исполнители</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <button class="btn-filter" onclick="applyFilters()">Применить</button>
+        <button class="btn-clear" onclick="clearFilters()">Сбросить</button>
+      </div>
+    </div>
+    <!-- Форма добавления дефекта -->
+    <form id="defectForm">
+      <h3>Добавить новый дефект</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="equipment">Оборудование:</label>
+          <select id="equipment" required>
+            <option value="">Выберите оборудование</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="section">Участок:</label>
+          <select id="section" required>
+            <option value="">Выберите участок</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="responsible">Ответственный:</label>
+          <select id="responsible">
+            <option value="">Выберите ответственного</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="danger_level">Уровень опасности:</label>
+          <select id="danger_level" required>
+            <option value="низкий">низкий</option>
+            <option value="средний">средний</option>
+            <option value="высокий">высокий</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group form-group-full">
+        <label for="description">Описание дефекта:</label>
+        <textarea id="description" placeholder="Подробно опишите дефект" required></textarea>
+      </div>
+      <div class="form-group form-group-full">
+        <label for="photo">Фотография дефекта (опционально):</label>
+        <input type="file" id="photo" accept="image/*" capture="camera">
+        <small style="color: #666;">Заргузите фотографию со своего устройства</small>
+      </div>
+      <button type="submit">Добавить дефект</button>
+      <button type="button" class="btn-reset" onclick="clearForm()">Очистить</button>
+    </form>
+    <h2>Список дефектов</h2>
+    <div id="messageArea"></div>
+    <table id="defectTable">
+      <thead>
+        <tr>
+          <th style="width: 4%;">ID</th>
+          <th style="width: 10%;">Оборудование</th>
+          <th style="width: 15%;">Описание</th>
+          <th style="width: 8%;">Участок</th>
+          <th style="width: 10%;">Время обнаружения</th>
+          <th style="width: 7%;">Опасность</th>
+          <th style="width: 7%;">Статус</th>
+          <th style="width: 10%;">Исполнитель</th>
+          <th style="width: 10%;">Ответственный</th>
+          <th style="width: 8%;">Время устранения</th>
+          <th style="width: 8%;">Фото</th>
+          <th style="width: 11%;">Действия</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <script>
+    // Глобальные переменные для фильтров
+    let currentFilters = {
+      section: '',
+      status: '',
+      danger_level: '',
+      assigned_to: ''
+    };
+    // Показ сообщения
+    function showMessage(message, type = 'success') {
+      const messageArea = document.getElementById('messageArea');
+      messageArea.innerHTML = `<div class="message message-${type}">${message}</div>`;
+      setTimeout(() => {
+        messageArea.innerHTML = '';
+      }, 5000);
+    }
+    // Очистка формы
+    function clearForm() {
+      document.getElementById('defectForm').reset();
+    }
+    // Очистка фильтров
+    function clearFilters() {
+      document.getElementById('filterSection').value = '';
+      document.getElementById('filterStatus').value = '';
+      document.getElementById('filterDanger').value = '';
+      document.getElementById('filterAssigned').value = '';
+      currentFilters = {
+        section: '',
+        status: '',
+        danger_level: '',
+        assigned_to: ''
+      };
+      loadDefects();
+    }
+    // Применение фильтров
+    function applyFilters() {
+      currentFilters = {
+        section: document.getElementById('filterSection').value,
+        status: document.getElementById('filterStatus').value,
+        danger_level: document.getElementById('filterDanger').value,
+        assigned_to: document.getElementById('filterAssigned').value
+      };
+      loadDefects();
+    }
+    // Функция показа фото
+    function showPhoto(url) {
+      const modal = document.createElement('div');
+      modal.className = 'photo-modal';
+      modal.innerHTML = `
+        <div class="photo-modal-close" onclick="document.body.removeChild(this.parentElement)">×</div>
+        <img src="${url}" onclick="document.body.removeChild(this.parentElement)">
+      `;
+      document.body.appendChild(modal);
+    }
+    // Загрузка списков выбора
+    function loadDropdownLists() {
+      fetch("/dropdown-lists/")
+        .then(res => res.json())
+        .then(data => {
+          // Оборудование
+          const equipmentSelect = document.getElementById('equipment');
+          equipmentSelect.innerHTML = '<option value="">Выберите оборудование</option>';
+          if (data.equipment) {
+            data.equipment.forEach(item => {
+              const option = document.createElement('option');
+              option.value = item;
+              option.textContent = item;
+              equipmentSelect.appendChild(option);
+            });
+          }
+          // Участки
+          const sectionSelect = document.getElementById('section');
+          const filterSectionSelect = document.getElementById('filterSection');
+          sectionSelect.innerHTML = '<option value="">Выберите участок</option>';
+          filterSectionSelect.innerHTML = '<option value="">Все участки</option>';
+          if (data.sections) {
+            data.sections.forEach(section => {
+              const option1 = document.createElement('option');
+              option1.value = section;
+              option1.textContent = section;
+              sectionSelect.appendChild(option1);
+              const option2 = document.createElement('option');
+              option2.value = section;
+              option2.textContent = section;
+              filterSectionSelect.appendChild(option2);
+            });
+          }
+          // Ответственные
+          const responsibleSelect = document.getElementById('responsible');
+          if (data.responsibles) {
+            responsibleSelect.innerHTML = '<option value="">Выберите ответственного</option>';
+            data.responsibles.forEach(person => {
+              const option = document.createElement('option');
+              option.value = person;
+              option.textContent = person;
+              responsibleSelect.appendChild(option);
+            });
+          }
+          // Исполнители (для фильтра)
+          const filterAssignedSelect = document.getElementById('filterAssigned');
+          if (data.executors) {
+            filterAssignedSelect.innerHTML = '<option value="">Все исполнители</option>';
+            data.executors.forEach(person => {
+              const option = document.createElement('option');
+              option.value = person;
+              option.textContent = person;
+              filterAssignedSelect.appendChild(option);
+            });
+          }
+        })
+        .catch(error => {
+          console.error("Ошибка загрузки списков:", error);
+        });
+    }
+    // Загрузка дефектов
+    function loadDefects() {
+      let url = "/defects/?";
+      const params = new URLSearchParams();
+      if (currentFilters.section) params.append('section', currentFilters.section);
+      if (currentFilters.status) params.append('status', currentFilters.status);
+      if (currentFilters.danger_level) params.append('danger_level', currentFilters.danger_level);
+      if (currentFilters.assigned_to) params.append('assigned_to', currentFilters.assigned_to);
+      url += params.toString();
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          const tbody = document.querySelector("#defectTable tbody");
+          tbody.innerHTML = "";
+          if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="12" style="text-align: center;">Нет дефектов</td></tr>';
+            return;
+          }
+          data.forEach(defect => {
+            const tr = document.createElement("tr");
+            let dangerClass = "";
+            if (defect.danger_level === "низкий") dangerClass = "danger-low";
+            else if (defect.danger_level === "средний") dangerClass = "danger-medium";
+            else if (defect.danger_level === "высокий") dangerClass = "danger-high";
+            tr.className = dangerClass;
+            let statusText = defect.status;
+            let statusClass = "";
+            if (defect.status === "новый") {
+              statusClass = "status-new";
+            } else if (defect.status === "в работе") {
+              statusClass = "status-in-progress";
+            } else if (defect.status === "завершён") {
+              statusClass = "status-completed";
+            }
+            let timeClass = "";
+            if (defect.resolution_time) {
+              const timeValue = parseFloat(defect.resolution_time);
+              if (timeValue > 24) timeClass = "time-high";
+              else if (timeValue > 12) timeClass = "time-medium";
+              else timeClass = "time-low";
+            }
+            const assignedInfo = defect.assigned_to && defect.time_started ?
+              `<div class="assigned-info">Начал: ${new Date(defect.time_started).toLocaleString('ru-RU')}</div>` :
+              '';
+            tr.innerHTML = `
+              <td>${defect.id}</td>
+              <td>${defect.equipment}</td>
+              <td>${defect.description}</td>
+              <td>${defect.section}</td>
+              <td>${new Date(defect.time_found).toLocaleString('ru-RU')}</td>
+              <td>${defect.danger_level}</td>
+              <td class="${statusClass}">${statusText}</td>
+              <td>
+                ${defect.assigned_to || '-'}
+                ${assignedInfo}
+              </td>
+              <td>${defect.responsible || '-'}</td>
+              <td class="resolution-time ${timeClass}">${defect.resolution_time || '-'}</td>
+              <td>
+                ${defect.photo_url ? 
+                  `<img src="${defect.photo_url}" style="max-width: 60px; max-height: 60px; cursor: pointer;" 
+                        onclick="showPhoto('${defect.photo_url}')">` : 
+                  'Нет фото'}
+              </td>
+              <td class="actions">
+                ${defect.status === 'новый' ?
+                  `<button class="btn-take" onclick="takeDefect(${defect.id})">Взять в работу</button>` : ''}
+                ${defect.status === 'в работе' ?
+                  `<button class="btn-complete" onclick="completeDefect(${defect.id})">Завершить</button>` : ''}
+                ${defect.status === 'завершён' && defect.photo_url ?
+                  `<button class="btn-view" onclick="showPhoto('${defect.photo_url}')">Посмотреть фото</button>` : ''}
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(error => {
+          console.error("Ошибка загрузки дефектов:", error);
+          showMessage("Ошибка загрузки данных", "error");
+        });
+    }
+    // Добавление дефекта
+    document.getElementById("defectForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const formData = new FormData();
+      const photoFile = document.getElementById("photo").files[0];
+      // Добавляем текстовые данные
+      formData.append("equipment", document.getElementById("equipment").value);
+      formData.append("description", document.getElementById("description").value.trim());
+      formData.append("section", document.getElementById("section").value);
+      formData.append("danger_level", document.getElementById("danger_level").value);
+      formData.append("responsible", document.getElementById("responsible").value || "");
+      // Добавляем фото если есть
+      if (photoFile) {
+        formData.append("photo", photoFile);
+      }
+      // Валидация
+      if (!formData.get("equipment") || !formData.get("description") || !formData.get("section")) {
+        showMessage("Пожалуйста, заполните все обязательные поля", "error");
+        return;
+      }
+      try {
+        const response = await fetch("/defects/", {
+          method: "POST",
+          body: formData
+        });
+        if (response.ok) {
+          showMessage("Дефект успешно добавлен!");
+          loadDefects();
+          document.getElementById("defectForm").reset();
+        } else {
+          showMessage("Ошибка при добавлении дефекта", "error");
+        }
+      } catch (error) {
+        console.error("Ошибка сети:", error);
+        showMessage("Ошибка сети", "error");
+      }
+    });
+    // Взять дефект в работу
+    function takeDefect(id) {
+      // Создаем модальное окно
+      const modal = document.createElement('div');
+      modal.style.position = 'fixed';
+      modal.style.top = '0';
+      modal.style.left = '0';
+      modal.style.width = '100%';
+      modal.style.height = '100%';
+      modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+      modal.style.display = 'flex';
+      modal.style.justifyContent = 'center';
+      modal.style.alignItems = 'center';
+      modal.style.zIndex = '1000';
+      // Содержимое модального окна
+      modal.innerHTML = `
+        <div style="background: white; padding: 20px; border-radius: 8px; width: 400px;">
+          <h3 style="margin-top: 0;">Взять дефект в работу</h3>
+          <div style="margin-bottom: 15px;">
+            <label for="modalAssignedTo">Исполнитель:</label>
+            <select id="modalAssignedTo" style="width: 100%; padding: 8px;">
+              <option value="">Выберите исполнителя</option>
+            </select>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <label for="modalResponsible">Ответственный:</label>
+            <select id="modalResponsible" style="width: 100%; padding: 8px;">
+              <option value="">Выберите ответственного</option>
+            </select>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <button onclick="document.body.removeChild(this.parentElement.parentElement.parentElement)" 
+                    style="background-color: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 4px;">
+              Отмена
+            </button>
+            <button onclick="confirmTakeDefect(${id})" 
+                    style="background-color: #28a745; color: white; padding: 8px 16px; border: none; border-radius: 4px;">
+              Подтвердить
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      // Заполняем выпадающие списки
+      fetch("/dropdown-lists/")
+        .then(res => res.json())
+        .then(data => {
+          const assignedSelect = document.getElementById('modalAssignedTo');
+          const responsibleSelect = document.getElementById('modalResponsible');
+          // Заполняем исполнителей
+          if (data.executors) {
+            data.executors.forEach(executor => {
+              const option = document.createElement('option');
+              option.value = executor;
+              option.textContent = executor;
+              assignedSelect.appendChild(option);
+            });
+          }
+          // Заполняем ответственных
+          if (data.responsibles) {
+            data.responsibles.forEach(responsible => {
+              const option = document.createElement('option');
+              option.value = responsible;
+              option.textContent = responsible;
+              responsibleSelect.appendChild(option);
+            });
+          }
+        })
+        .catch(error => {
+          console.error("Ошибка загрузки списков:", error);
+        });
+    }
+    // Подтверждение взятия дефекта в работу
+    function confirmTakeDefect(id) {
+      const assignedTo = document.getElementById('modalAssignedTo').value;
+      const responsible = document.getElementById('modalResponsible').value;
+      if (!assignedTo) {
+        alert("Пожалуйста, выберите исполнителя");
+        return;
+      }
+      // Удаляем модальное окно
+      const modal = document.querySelector('div[style*="background-color: rgba(0, 0, 0, 0.5)"]');
+      if (modal) {
+        document.body.removeChild(modal);
+      }
+      // Отправляем запрос на сервер
+      fetch(`/defects/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "в работе",
+          assigned_to: assignedTo.trim(),
+          responsible: responsible || null
+        })
+      })
+      .then(response => {
+        if (response.ok) {
+          showMessage("Дефект взят в работу!");
+          loadDefects();
+        } else {
+          showMessage("Ошибка при взятии дефекта в работу", "error");
+        }
+      })
+      .catch(error => {
+        console.error("Ошибка:", error);
+        showMessage("Ошибка сети", "error");
+      });
+    }
+    // Завершить дефект
+    function completeDefect(id) {
+      if (confirm("Вы уверены, что хотите завершить этот дефект?")) {
+        fetch(`/defects/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            status: "завершён"
+          })
+        })
+        .then(response => {
+          if (response.ok) {
+            showMessage("Дефект завершён!");
+            loadDefects();
+          } else {
+            showMessage("Ошибка при завершении дефекта", "error");
+          }
+        })
+        .catch(error => {
+          console.error("Ошибка:", error);
+          showMessage("Ошибка сети", "error");
+        });
+      }
+    }
+    // Загрузка при старте
+    loadDropdownLists();
+    loadDefects();
+    // Автообновление каждые 30 секунд
+    setInterval(loadDefects, 30000);
+  </script>
+</body>
+</html>
